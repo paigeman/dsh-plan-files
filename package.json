@@ -1,20 +1,75 @@
 {
   "name": "dsh-plan-files",
-  "private": true,
+  "version": "0.1.0",
+  "description": "Persistent Markdown plan files with native DeepSeek Harness Plan Review",
   "type": "module",
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "plan-mode",
+    "markdown",
+    "planning"
+  ],
+  "license": "MIT",
+  "workspaces": [
+    "test/runtimes/*"
+  ],
+  "exports": {
+    ".": "./index.js",
+    "./locale/*.json": "./locale/*.json"
+  },
+  "files": [
+    "index.js",
+    "lib/**/*.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "README.md",
+    "README.zh-CN.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22.0.0",
+    "dsh": "0.2.2-rc.3"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
   "scripts": {
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "npm run lint:js && npm run lint:markdown",
     "lint:js": "eslint .",
     "lint:markdown": "markdownlint-cli2",
-    "check": "npm run format:check && npm run lint"
+    "test": "node --test test/*.test.js",
+    "test:native": "node scripts/test-native.mjs",
+    "verify:package": "node scripts/verify-package.mjs",
+    "acceptance": "node scripts/acceptance.mjs",
+    "test:desktop": "node scripts/acceptance.mjs desktop",
+    "test:tui": "node scripts/acceptance.mjs tui",
+    "test:tui:config": "node scripts/acceptance.mjs tui-config",
+    "check": "npm run format:check && npm run lint && npm run test:native && npm run verify:package",
+    "prepublishOnly": "npm run check"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
     "eslint": "10.12.0",
     "globals": "17.13.0",
     "markdownlint-cli2": "0.23.2",
-    "prettier": "3.9.5"
+    "prettier": "3.9.5",
+    "semver": "7.7.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/paigeman/dsh-plan-files.git"
+  },
+  "homepage": "https://github.com/paigeman/dsh-plan-files#readme",
+  "bugs": {
+    "url": "https://github.com/paigeman/dsh-plan-files/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
   }
 }
