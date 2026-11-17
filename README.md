@@ -4,7 +4,7 @@
 
 DSH Plan Files keeps DeepSeek Harness (DSH) plans in independent Markdown files while using DSH's native Plan Review for feedback and approval.
 
-The plugin supports DSH `0.2.2-rc.3` and Node.js 22 or later. Local test builds use the distinct package name `dsh-plan-files-dev`, component ID `plan-files-dev`, and a `[DEV]` title. Development installation and automated acceptance are covered in [CONTRIBUTING.md](CONTRIBUTING.md).
+The plugin supports DSH `0.2.2-rc.3` and Node.js 22 or later.
 
 ## Installation
 
@@ -73,7 +73,8 @@ Shell and other independent processes run under their existing DSH permissions. 
 
 | Plugin version        | Supported DSH versions |
 | --------------------- | ---------------------- |
-| 0.1.0 (this checkout) | 0.2.2-rc.3             |
+| 0.1.0                 | 0.2.2-rc.3             |
+| 0.1.1 (this checkout) | 0.2.2-rc.3             |
 
 The supported DSH version matches `engines.dsh` and the pinned test workspace. GitHub Actions is configured to run native compatibility tests and packed-plugin checks on Linux, macOS, and Windows. Local macOS validation covers the native DSH runtime and real-model Desktop sessions using the standard and PTC presets. Compatibility with dsh-TUI `0.20.1` has also been tested through its `/plan` picker and Shift+Tab read-only mode. Linux sandbox behavior remains unverified.
 

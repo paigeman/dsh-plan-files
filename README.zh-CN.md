@@ -4,7 +4,7 @@
 
 DSH Plan Files 为 DeepSeek Harness（DSH）保存独立的 Markdown 计划文件，并沿用 DSH 原生 Plan Review 完成反馈和审批。
 
-插件支持 DSH `0.2.2-rc.3`，需要 Node.js 22 或以上版本。本地测试包使用独立包名 `dsh-plan-files-dev`、组件 ID `plan-files-dev` 和 `[DEV]` 标识。开发版安装与自动验收流程见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+插件支持 DSH `0.2.2-rc.3`，需要 Node.js 22 或以上版本。
 
 ## 安装
 
@@ -73,7 +73,8 @@ Shell 和其他独立进程仍使用 DSH 既有权限。拥有计划目录写权
 
 | 插件版本          | 支持的 DSH 版本 |
 | ----------------- | --------------- |
-| 0.1.0（当前源码） | 0.2.2-rc.3      |
+| 0.1.0             | 0.2.2-rc.3      |
+| 0.1.1（当前源码） | 0.2.2-rc.3      |
 
 支持的 DSH 版本与 `engines.dsh` 及固定版本的测试 workspace 一致。GitHub Actions 已配置 Linux、macOS、Windows 的原生兼容性测试和打包验证。本地已在 macOS 验证 DSH 原生运行时及 Desktop 真实模型会话，覆盖标准预设和 PTC 预设。另已验证 dsh-TUI `0.20.1` 的兼容性，包括 `/plan` 选择器和 Shift+Tab 只读模式。Linux 沙箱行为尚未验证。
 

@@ -156,7 +156,9 @@ node scripts/release.mjs dry-run
 
 Push the workflows to GitHub and let the three-platform CI finish. A push to `main` or a pull request runs CI. The release workflow also offers a manual dry run before a version tag is created.
 
-npm requires the package to exist before a trusted publisher can be configured. For a new package, first publish the verified CI tarball using the package owner's npm account and two-factor authentication. Keep `NPM_PUBLISH_ENABLED` unset during this initial setup. The prerequisite is documented in [npm trust](https://docs.npmjs.com/cli/v11/commands/npm-trust/#prerequisites).
+npm requires the package to exist before a trusted publisher can be configured. This repository's bootstrap procedure publishes the verified CI tarball using the package owner's npm account and two-factor authentication. Keep `NPM_PUBLISH_ENABLED` unset during that initial setup. The prerequisite is documented in [npm trust](https://docs.npmjs.com/cli/v11/commands/npm-trust/#prerequisites).
+
+A first release can also be uploaded from GitHub Actions using valid npm publishing credentials. npm also supports staging a new package from CI and having a maintainer approve it with 2FA. These options are described in the [npm publication documentation](https://docs.npmjs.com/creating-and-publishing-unscoped-public-packages/).
 
 When preparing the next new package version, configure a trusted publisher for GitHub owner `paigeman`, repository `dsh-plan-files`, workflow filename `release.yml`, and environment `npm`. Permit direct `npm publish` for this connection. The workflow uses a GitHub-hosted runner with `id-token: write` and npm OIDC authentication. npm requires CLI 11.5.1 or later and Node.js 22.14.0 or later for this flow. The workflow pins Node.js 24.16.0. A new trusted publisher configuration must complete its first successful publication within two days. These settings follow the current [npm trusted publishing documentation](https://docs.npmjs.com/trusted-publishers/).
 
