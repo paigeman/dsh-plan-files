@@ -82,6 +82,6 @@ Shell 和其他独立进程仍使用 DSH 既有权限。拥有计划目录写权
 
 开发环境、格式化规则、lint 命令和 CI 检查见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
-版本标签会触发打包验证、GitHub Release 创建，并在 npm 发布配置启用后执行发包。发布预演和账号配置见[发布说明](CONTRIBUTING.md#releases)。
+版本标签会触发打包验证、GitHub Release 创建，并在 npm 发布配置启用后执行发包。发布预演和版本标签见[发布说明](CONTRIBUTING.md#releases)。
 
 本项目采用 MIT 许可。

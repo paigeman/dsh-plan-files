@@ -1,173 +1,131 @@
 # Contributing
 
+Contributions can improve plan-file editing, native approval, compatibility, tests, or documentation. Installation and everyday use are covered in the [English README](README.md) and [Chinese README](README.zh-CN.md).
+
+## Report a problem
+
+Include the DSH version, frontend and its version, operating system, steps to reproduce, and the expected and actual results. For an editing problem, provide a small Markdown example and the requested change. Keep private plan contents, personal paths, and model credentials out of public reports.
+
 ## Set up a development checkout
 
-Use Node.js 24. CI uses Node.js 24.16.0. Install the locked development dependencies from the repository root.
+Fork the repository and create a branch for your change. Use Node.js 24.16.0 to match CI, then install the locked development dependencies from the repository root.
 
 ```bash
 npm ci --ignore-scripts
 ```
 
-Tool versions and rules follow `dsh-claude-memory`. Prettier formats supported files, ESLint checks JavaScript with its recommended rules and Node.js globals, and markdownlint checks Markdown.
+This installs the development tools and private test workspace under `test/runtimes/`. The workspace pins the DSH and Cordis libraries used by the native tests. The plugin runtime requires Node.js 22 or later.
 
 ## Make and check a change
 
-Format the files you edit, then run the full check.
+Keep the change focused. Format the files you edit with the repository's Prettier configuration. For example, after editing the English README, run the following command.
 
 ```bash
-npm run format
+npx --no-install prettier --write README.md
+```
+
+For code changes, run the full check before opening a pull request.
+
+```bash
 npm run check
 ```
 
-Individual checks are available while developing.
+This checks formatting, JavaScript, and Markdown, runs the native regression suite, and verifies the packed plugin. CI runs the declared DSH test matrix on Linux, macOS, and Windows.
 
-| Command                  | Purpose                                                             |
-| ------------------------ | ------------------------------------------------------------------- |
-| `npm run format`         | Format supported files                                              |
-| `npm run format:check`   | Check formatting                                                    |
-| `npm run lint:js`        | Check JavaScript and MJS files                                      |
-| `npm run lint:markdown`  | Check Markdown                                                      |
-| `npm run lint`           | Run all linters                                                     |
-| `npm test`               | Run unit, compatibility, release, and native regression tests       |
-| `npm run test:native`    | Run each pinned DSH runtime with zero skipped tests                 |
-| `npm run verify:package` | Check the tarball and run native tests through its extracted entry  |
-| `npm run check`          | Check formatting, lint, native compatibility, and the packed plugin |
+For documentation-only changes, format the affected Markdown files and run `npm run lint:markdown`.
 
-To work on selected files, invoke the local tools directly.
+| Command                  | What it checks                                                     |
+| ------------------------ | ------------------------------------------------------------------ |
+| `npm run format:check`   | Formatting against the repository's Prettier configuration         |
+| `npm run lint`           | JavaScript and Markdown rules                                      |
+| `npm test`               | Unit, native integration, compatibility, and release regressions   |
+| `npm run test:native`    | Pinned DSH runtimes with zero skipped tests                        |
+| `npm run verify:package` | Package contents and native editing and approval through its entry |
 
-```bash
-npm exec --no -- prettier --write README.md
-npm exec --no -- eslint eslint.config.mjs
-npm exec --no -- markdownlint-cli2 README.md
-```
+Native tests exercise DSH's compatibility gate, tool pipeline, filesystem, and PlanMode controller with scripted review answers. The runner checks package versions and shared Cordis identity before testing. Fixtures and verification output stay under `.agent-tmp/`.
 
-Prettier uses two-space indentation, LF line endings, and a print width of 100. Markdown prose keeps its existing line wrapping. Markdown lint permits long lines and repeated headings under different parent sections, and uses fenced code blocks with backticks and asterisks for emphasis.
-
-`node_modules/`, `.agent-tmp/`, and `coverage/` are excluded from Git, formatting, and lint checks. Keep agent-created temporary files under the repository's `.agent-tmp/` directory and track them according to the session's Agent Rules.
-
-## Integration validation
-
-Native integration tests use the exact DSH and Cordis versions declared in the private workspace under `test/runtimes/0.2.2-rc.3/`. The root `npm ci --ignore-scripts` installs these development dependencies.
+To inspect the matrix or select a supported runtime, use the following commands.
 
 ```bash
-npm run test:native
-```
-
-The runner checks the resolved package versions and shared Cordis identity, then exercises the native compatibility gate, tool pipeline, PlanMode controller, and local filesystem. It fails if any test is skipped. Fixtures stay under `.agent-tmp/`.
-
-To select one declared runtime or inspect the matrix, use the following commands.
-
-```bash
-npm run test:native -- --version 0.2.2-rc.3
 node scripts/test-native.mjs --list
+npm run test:native -- --version 0.2.2-rc.3
 ```
 
-For an explicitly selected external installation, set `DSH_NATIVE_PACKAGE` to its `@deepseek-ai/dsh/package.json`. Its packages must match the pinned test versions.
+Set `DSH_NATIVE_PACKAGE` to an installed DSH `package.json` to check that installation against the same pinned versions.
 
-### Maintain DSH compatibility
+Use synthetic plans in regression tests. Changes to editing and approval should preserve text outside exact replacements, reuse the session's file after resume and Plan Mode re-entry, and keep review content consistent with the saved file. Update both READMEs when installation or configuration changes.
 
-The current support table contains DSH `0.2.2-rc.3`. `engines.dsh`, the runtime workspaces, and the tables in both READMEs describe the same supported versions. Compatibility regression tests enforce that agreement and use DSH's own loader check to validate the package declaration.
+## Maintain DSH compatibility
 
-When adding a runtime, create a private workspace with exact DSH and Cordis versions. Update `engines.dsh` and both support tables together, install the test dependencies, then run `npm run check` to verify the native tools, compatibility declarations, and packed plugin. The CI matrix reads the workspace list automatically.
+The current supported runtime is DSH `0.2.2-rc.3`. The private test workspaces, `engines.dsh`, and both README support tables must agree. Compatibility tests check that agreement and use DSH's own compatibility checker.
 
-### Verify the package
+To add a supported DSH version, follow these steps.
 
-```bash
-npm run verify:package
-```
+1. Check the filesystem's versioned writes, tool guards and execution wrappers, PlanMode controller, and native review contracts against the existing implementation.
+2. Add a private workspace under `test/runtimes/<DSH version>/package.json`. Pin the packages used by the existing workspace to exact matching DSH, Cordis, and Loader versions.
+3. Update `engines.dsh` and both README support tables, then update the lockfile with `npm install --ignore-scripts`.
+4. Run `npm run check`. CI derives its operating-system and DSH-version matrix from the workspaces automatically.
 
-This packs the formal `dsh-plan-files` package, checks its file allowlist and bundle identity, extracts it, and runs the native edit-and-approval suite through the extracted entry. The archive, `release.json`, and `SHA256SUMS` are retained under `.agent-tmp/package/`. Development scripts, test workspaces, and acceptance data stay outside the distributable. Local smoke fixtures are retained under `.agent-tmp/`.
+List tested DSH release candidates explicitly in the engine declaration. When changing the supported versions, update the workspaces, engine declaration, and support tables together.
 
-### Desktop acceptance
+## Validate in DSH Desktop
 
-Keep DSH Desktop open, signed in, and idle, then run the following command.
+Keep DSH Desktop open, signed in, and idle, then run this from the checkout.
 
 ```bash
 npm run test:desktop
 ```
 
-The command builds and installs `dsh-plan-files-dev` with a `plan-files-dev` component and `[DEV]` titles. It reuses an installed candidate whose files still match the checkout. It adds an owned acceptance-controller block to the Desktop profile, with a backup under `.agent-tmp/acceptance/profile-backups/`. Test plans, package archives, and reports stay under `.agent-tmp/acceptance/`. The development package uses that isolated plan directory.
+The runner installs or refreshes the private `dsh-plan-files-dev` package with a `plan-files-dev` component and `[DEV]` titles. It connects a development controller through an owned block in the Desktop profile's `cordis.patch.yml`. Profile backups, candidate packages, synthetic projects, plans, and reports stay under `.agent-tmp/acceptance/`. Keep the checkout in place while using the controller.
 
-Acceptance activates the development component and creates an owned test Agent for each of the standard and PTC presets in a synthetic Git project. It sends a task to the configured real model and checks the saved plan, natural-language feedback, exact revision, native approval, and retained file. It then re-enters Plan Mode in the same session and verifies a further localized revision and approval of that file. This uses the model's normal quota. The controller checks for running conversations before switching this project's plugin. Cleanup restores the stable component states and turns off the development bundle, component, and acceptance controller.
+Acceptance uses Desktop's configured real model and normal model quota. It checks plan creation, natural-language feedback, exact revision, native approval, and reuse of the file after Plan Mode re-entry with the standard and PTC presets. The runner checks for active conversations before switching this project's plugin.
 
-Each test Agent has a recorded ID and lifecycle handle. Cleanup stops it, releases its writer, removes its JSONL record, and checks that it has disappeared from storage and the conversation list. Reports and test plan files remain available for inspection. The cleanup adapter targets the current DSH JSONL backend because this release has no public session-deletion API. It reports cleanup failures in the acceptance report.
+Cleanup stops the owned test Agents, removes their saved conversations, restores the stable component states, and turns off the development bundle, component, and controller. Plan files and reports are retained for inspection. Cleanup failures fail the acceptance run.
 
-The macOS runner locates the bundled Desktop CLI. Set `DSH_DESKTOP_CLI` for another installation. When the controller's source changes, its profile block uses a new entry identity and module URL so Desktop can load the revision through HMR. Reconnect the controller or inspect its current status with the following commands.
+The Desktop adapter has been exercised on macOS with DSH `0.2.2-rc.3`. macOS finds the bundled Desktop CLI automatically. Set `DSH_DESKTOP_CLI` to the bundled launcher if the installation is elsewhere.
+
+For controller diagnostics, use the following commands after preparing a matching candidate with `npm run test:desktop`.
 
 ```bash
 npm run acceptance -- connect
 npm run acceptance -- status
-```
-
-To repeat acceptance with the matching installed candidate after connecting, run the following command.
-
-```bash
 npm run acceptance -- run
-```
-
-To close development components after a diagnostic connection, run the following command.
-
-```bash
 npm run acceptance -- off
 ```
 
-### Third-party frontend compatibility
+Finish diagnostic sessions with `off`. Inspect the retained report before retrying an interrupted run.
 
-For a personal installation using dsh-TUI, run the following interactive integration test on macOS or Linux with Python 3 available.
+## Validate dsh-TUI compatibility
+
+With dsh-TUI installed and Python 3 available on macOS or Linux, run the terminal acceptance test.
 
 ```bash
 npm run test:tui
 ```
 
-The script first checks profile composition, then launches the installed engine and frontend in a pseudo-terminal. It operates the real `/plan` picker and Shift+Tab mode switch, types natural-language feedback into Plan Review, and approves the revised plan through the native panel. Both entries must reuse the session's file, preserve text outside each revision, exit Plan Mode after approval, and retain the Markdown file. Shift+Tab also exercises the read-only sandbox mode.
+The runner loads a development component through an isolated overlay and operates the real frontend in a pseudo-terminal. It exercises the `/plan` picker, Shift+Tab read-only mode, natural-language feedback, exact edits, and native approval. Model requests use the saved TUI model route or DSH's default and consume normal model quota.
 
-The development package is loaded through a temporary overlay. Session persistence, storage, plans, and TUI preferences live under a fresh `.agent-tmp/tui-*` directory. A process-local module hook redirects the frontend's data-directory constant to that test directory. The installed frontend files and profile configuration are read directly. A test observer records native events and delegates every approval answer to the TUI.
+Preferences, storage, session records, plans, and terminal output stay under a fresh `.agent-tmp/tui-*` directory. The runner removes its test conversations after exit, and the development component stops with the process. Reports and approved plans are retained.
 
-After the terminal exits, cleanup verifies session ownership and removes the test JSONL records. The temporary development component ends with its process. Reports, terminal output, and approved plans remain in the isolated run directory. The test reads the saved TUI model route and falls back to the native DSH default when that preference is absent. Requests use that model's normal quota.
+Set `DSH_TUI_PACKAGE` to the frontend's `package.json` and `DSH_CLI` to the engine command when using other installation paths. For a configuration-only check, run `npm run test:tui:config`.
 
-Set `DSH_TUI_PACKAGE` to the frontend's `package.json` and `DSH_CLI` to the engine command when using other installation paths. To run only the boot-free configuration check, use the following command.
+## Open a pull request
 
-```bash
-npm run test:tui:config
+Target `main`. Describe the problem, the resulting behavior, and the checks you ran. Include reproduction steps for a bug fix and explain any compatibility limit the change introduces.
+
+Write commit messages in English. Use `type(scope): short summary` for the subject and a bullet list for the body. For example, an approval fix could use this message.
+
+```text
+fix(plan-files): revalidate saved content before approval
+
+- check the saved plan after the review answer returns
+- cover external edits while Plan Review is open
 ```
 
-## CI
-
-GitHub Actions runs on pushes to `main`, pull requests, and calls from the release workflow. The quality job checks formatting, JavaScript and Markdown lint, workflow syntax with actionlint, and the runtime matrix. Native jobs run the current DSH workspace on Linux, macOS, and Windows with zero skipped tests, then verify the packed plugin on each platform.
-
-After the matrix passes, a package job creates the release archive and checksum metadata and uploads them as a workflow artifact. The release workflow checks out the planned commit and publishes that verified archive. Desktop and TUI acceptance use the configured real model and are run locally through their documented commands.
+Use the module as the scope when possible. Supported types are `feat`, `fix`, `refactor`, `perf`, `test`, `docs`, `build`, `ci`, `chore`, and `revert`.
 
 ## Releases
 
-The release workflow supports version tags such as `v0.1.0` and manual runs. Its tag must match `package.json`, and publication uses the commit resolved from that tag. Stable versions use npm's `latest` tag. Prerelease versions use `next`.
+Update the package version and lockfile, run `npm run check`, and commit the release changes. Push the matching version tag to trigger the Release workflow. It verifies the tagged commit, publishes the tested archive to npm through OIDC, and creates the GitHub Release. Stable versions use `latest`, and prerelease versions use `next`.
 
-### Preview a release
-
-In GitHub Actions, run **Release** with **dry_run** enabled. Leave **tag** empty to validate the selected branch, or supply an existing version tag. The workflow runs the full CI matrix, verifies the package artifact, and executes `npm publish --dry-run`.
-
-The same package preview can be run locally after verification.
-
-```bash
-npm run verify:package
-node scripts/release.mjs dry-run
-```
-
-### Configure npm publishing
-
-Push the workflows to GitHub and let the three-platform CI finish. A push to `main` or a pull request runs CI. The release workflow also offers a manual dry run before a version tag is created.
-
-npm requires the package to exist before a trusted publisher can be configured. This repository's bootstrap procedure publishes the verified CI tarball using the package owner's npm account and two-factor authentication. Keep `NPM_PUBLISH_ENABLED` unset during that initial setup. The prerequisite is documented in [npm trust](https://docs.npmjs.com/cli/v11/commands/npm-trust/#prerequisites).
-
-A first release can also be uploaded from GitHub Actions using valid npm publishing credentials. npm also supports staging a new package from CI and having a maintainer approve it with 2FA. These options are described in the [npm publication documentation](https://docs.npmjs.com/creating-and-publishing-unscoped-public-packages/).
-
-When preparing the next new package version, configure a trusted publisher for GitHub owner `paigeman`, repository `dsh-plan-files`, workflow filename `release.yml`, and environment `npm`. Permit direct `npm publish` for this connection. The workflow uses a GitHub-hosted runner with `id-token: write` and npm OIDC authentication. npm requires CLI 11.5.1 or later and Node.js 22.14.0 or later for this flow. The workflow pins Node.js 24.16.0. A new trusted publisher configuration must complete its first successful publication within two days. These settings follow the current [npm trusted publishing documentation](https://docs.npmjs.com/trusted-publishers/).
-
-Create the GitHub environment `npm` and set repository variable `NPM_PUBLISH_ENABLED` to `true` when the package's publishing access is ready. GitHub Release creation also works while that variable is unset. It uploads the verified tarball and `SHA256SUMS` and reports the npm job's skipped state.
-
-Push the next version tag to exercise OIDC publication. Re-running a version whose archive is already published takes the integrity-match skip path. An actual publication of a new version validates the OIDC connection.
-
-### Publish a version
-
-Update the package version and lockfile, run `npm run check`, and commit the release changes. Push the matching version tag to trigger the workflow. It reuses CI for that exact commit, publishes the tested archive, and creates the GitHub Release with generated notes.
-
-A retry compares the existing npm version's integrity with the verified archive. Matching content completes that step without another publication. Conflicting content fails the run. Existing GitHub release notes are retained, and existing asset names must have matching bytes.
+To preview a release, run **Release** in GitHub Actions with **dry_run** enabled. Leave **tag** empty to validate the selected branch, or supply an existing version tag. The workflow runs CI and executes `npm publish --dry-run` with the verified package.

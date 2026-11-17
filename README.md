@@ -82,6 +82,6 @@ The supported DSH version matches `engines.dsh` and the pinned test workspace. G
 
 Development setup, formatting rules, lint commands, and CI checks are documented in [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Version tags trigger package verification, GitHub Release creation, and npm publication when its publishing configuration is enabled. Release previews and account setup are covered in the [release instructions](CONTRIBUTING.md#releases).
+Version tags trigger package verification, GitHub Release creation, and npm publication when its publishing configuration is enabled. Release previews and version tags are covered in the [release instructions](CONTRIBUTING.md#releases).
 
 MIT licensed.
