@@ -123,9 +123,3 @@ fix(plan-files): revalidate saved content before approval
 ```
 
 Use the module as the scope when possible. Supported types are `feat`, `fix`, `refactor`, `perf`, `test`, `docs`, `build`, `ci`, `chore`, and `revert`.
-
-## Releases
-
-Update the package version and lockfile, run `npm run check`, and commit the release changes. Push the matching version tag to trigger the Release workflow. It verifies the tagged commit, publishes the tested archive to npm through OIDC, and creates the GitHub Release. Stable versions use `latest`, and prerelease versions use `next`.
-
-To preview a release, run **Release** in GitHub Actions with **dry_run** enabled. Leave **tag** empty to validate the selected branch, or supply an existing version tag. The workflow runs CI and executes `npm publish --dry-run` with the verified package.
