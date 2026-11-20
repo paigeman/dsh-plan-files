@@ -11,6 +11,7 @@ import {
 } from "node:fs";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import { runInNewContext } from "node:vm";
 import test from "node:test";
 import { controlPatch } from "../scripts/acceptance-control.mjs";
 import { nativeRuntime } from "./native-runtime.js";
@@ -30,6 +31,56 @@ const { PlanModeController } = await runtime.load("dsh-plan-mode");
 const { Loader, Group } = await runtime.load("cordis-plugin-loader");
 const fileTools = await runtime.load("dsh-tool-fs");
 const stringEditor = await runtime.load("dsh-tool-str-replace-editor");
+
+test("Desktop review actions show and copy a managed plan's path", async () => {
+  const entry = process.env.DSH_PLAN_FILES_ENTRY
+    ? new URL("./client.js", pathToFileURL(resolve(process.env.DSH_PLAN_FILES_ENTRY)))
+    : new URL("../client.js", import.meta.url);
+  let module;
+  const clipboard = [];
+  runInNewContext(readFileSync(entry, "utf8"), {
+    __ModuleLoader__: { load: (declared) => (module = declared) },
+    navigator: { clipboard: { writeText: (path) => clipboard.push(path) } },
+  });
+  assert.equal(module.id, "dsh-plan-files");
+  const view = module.factory((name) => {
+    assert.equal(name, "react");
+    return {
+      createElement: (type, props, ...children) => ({ type, props, children }),
+      useState: () => [undefined, () => {}],
+    };
+  });
+  let render;
+  view.apply({
+    effect: () => {},
+    slots: {
+      inject(slot, callback) {
+        assert.equal(slot, "conversation.plan-review.actions");
+        callback();
+      },
+      register(_options, component) {
+        render = component;
+      },
+    },
+  });
+  const question = "Approve this plan?";
+  assert.equal(render({ review: { question } }), null);
+  for (const path of [
+    "/plans/review checklist.md",
+    "C:\\Plans\\review.md",
+    "/plans/two\nlines.md",
+  ]) {
+    const display = path.includes("\n") ? JSON.stringify(path) : path;
+    const button = render({
+      review: { question: `${question}\nPlan file: ${display}` },
+      t: (key) => key,
+    });
+    assert.equal(button.type, "button");
+    assert.equal(button.children.map((span) => span.children[0]).join(""), display);
+    await button.props.onClick();
+    assert.equal(clipboard.at(-1), path);
+  }
+});
 
 test("Desktop controller revisions replace their loader entry without restarting the Host", async (t) => {
   const ctx = new Context();
@@ -197,11 +248,15 @@ test("native schema, precise edits, feedback, and approval across Plan Mode re-e
   assert.deepEqual(readFileSync(first.path), Buffer.from(first.content));
   const mismatch = await f.call("exit_plan_mode", { plan: "# Another" });
   assert.equal(mismatch.isError, true);
-  f.answer(async () => ({
-    answers: [
-      { id: "plan-review", selected: ["Keep planning"], custom: "Change First to Revised" },
-    ],
-  }));
+  f.answer(async ({ questions: [review] }) => {
+    assert.equal(review.detail, first.content);
+    assert.ok(review.question.endsWith(`\nPlan file: ${first.path}`));
+    return {
+      answers: [
+        { id: "plan-review", selected: ["Keep planning"], custom: "Change First to Revised" },
+      ],
+    };
+  });
   const feedback = await f.call("exit_plan_mode", { plan: first.content });
   assert.equal(feedback.isError, true);
   assert.match(JSON.stringify(feedback), /Change First to Revised/);
@@ -214,7 +269,11 @@ test("native schema, precise edits, feedback, and approval across Plan Mode re-e
   assert.equal(edited.isError, false, JSON.stringify(edited));
   assert.equal(edited.value.path, first.path);
   assert.equal(edited.value.content, "\ufeff# Native\r\nRevised\nKeep this");
-  f.answer(async () => ({ answers: [{ id: "plan-review", selected: ["Approve"] }] }));
+  f.answer(async ({ questions: [review] }) => {
+    assert.equal(review.detail, edited.value.content);
+    assert.ok(review.question.endsWith(`\nPlan file: ${first.path}`));
+    return { answers: [{ id: "plan-review", selected: ["Approve"] }] };
+  });
   const approved = await f.call("exit_plan_mode", { plan: edited.value.content });
   assert.equal(approved.isError, false, JSON.stringify(approved));
   assert.equal(f.plan.get(f.agent).pending, false);
@@ -234,6 +293,11 @@ test("native schema, precise edits, feedback, and approval across Plan Mode re-e
   assert.equal(continued.isError, false, JSON.stringify(continued));
   assert.equal(continued.value.path, first.path);
   assert.equal(continued.value.content, "\ufeff# Native\r\nRevised again\nKeep this");
+  f.answer(async ({ questions: [review] }) => {
+    assert.equal(review.detail, continued.value.content);
+    assert.ok(review.question.endsWith(`\nPlan file: ${first.path}`));
+    return { answers: [{ id: "plan-review", selected: ["Approve"] }] };
+  });
   const reapproved = await f.call("exit_plan_mode", { plan: continued.value.content });
   assert.equal(reapproved.isError, false, JSON.stringify(reapproved));
   f.plan.onBoundary(f.agent.session);

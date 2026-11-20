@@ -6,7 +6,7 @@ import { nativeRuntimes } from "../scripts/test-native.mjs";
 import { nativeRuntime } from "./native-runtime.js";
 
 const pkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
-const unverifiedVersions = ["0.2.2", "0.2.2-rc.4", "0.2.3-rc.1", "0.3.0"];
+const unverifiedVersions = ["0.2.2-rc.2", "0.2.2-rc.6", "0.2.2", "0.2.3-rc.1", "0.3.0"];
 
 test("DSH engines and README tables match the tested matrix and exclude unverified releases", () => {
   const versions = nativeRuntimes().map((runtime) => runtime.version);

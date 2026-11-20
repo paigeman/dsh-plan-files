@@ -51,7 +51,7 @@ export function apply(ctx, config) {
     if (request.agent?.id !== agent?.id) return next();
     const question = request.questions.find((item) => item.intent?.kind === "plan-review");
     if (!question) return next();
-    const review = { detail: question.detail, open: true };
+    const review = { question: question.question, detail: question.detail, open: true };
     state.reviews.push(review);
     save();
     try {

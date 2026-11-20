@@ -112,7 +112,7 @@ function cleanupSessions(directory, project) {
   return removed;
 }
 
-export async function tuiAcceptance({ root, frontend, candidate, cli = "dsh" }) {
+export async function tuiAcceptance({ root, frontend, candidate, cli, versions }) {
   assert(
     ["darwin", "linux"].includes(process.platform),
     "TUI PTY acceptance requires macOS or Linux.",
@@ -297,6 +297,7 @@ export async function tuiAcceptance({ root, frontend, candidate, cli = "dsh" }) 
       assert(saved);
       if (cycle === 0) sessionPlanPath = saved.path;
       assert.equal(saved.path, sessionPlanPath, "Plan Mode re-entry allocated a different file.");
+      assert(renderedIncludes(terminal.slice(start), `Plan file: ${saved.path}`));
       assert.equal(readFileSync(saved.path, "utf8"), initial);
       paste(feedback);
       await waitFor(
@@ -317,6 +318,7 @@ export async function tuiAcceptance({ root, frontend, candidate, cli = "dsh" }) 
       assert.deepEqual(state.reviews.at(-2).answer.selected, ["Keep planning"]);
       assert.equal(state.reviews.at(-1).detail, revised);
       assert.equal(state.records.at(-1).path, saved.path);
+      assert(state.reviews.at(-1).question.endsWith(`\nPlan file: ${saved.path}`));
       assert.deepEqual(readFileSync(saved.path), Buffer.from(revised));
       child.stdin.write("1");
       await waitFor(
@@ -331,6 +333,7 @@ export async function tuiAcceptance({ root, frontend, candidate, cli = "dsh" }) 
         entry,
         savedFile: saved.path,
         exactRevision: true,
+        reviewPathVisible: true,
         nativeApproval: true,
         planRetained: true,
       });
@@ -373,10 +376,7 @@ export async function tuiAcceptance({ root, frontend, candidate, cli = "dsh" }) 
   const result = {
     status: failure ? "failed" : "passed",
     frontend: "dsh-TUI",
-    versions: {
-      dsh: "0.2.2-rc.3",
-      tui: JSON.parse(readFileSync(join(frontend, "package.json"), "utf8")).version,
-    },
+    versions,
     package: candidate.name,
     cases,
     cleanup,

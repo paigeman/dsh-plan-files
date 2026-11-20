@@ -74,6 +74,8 @@ jobs:
       - name: Run native plan editing, approval, and compatibility tests
         run: npm run test:native -- --version ${{ matrix.dsh }}
       - name: Smoke-test the packed plugin on this platform
+        env:
+          DSH_TEST_VERSION: ${{ matrix.dsh }}
         run: npm run verify:package
 
   package:

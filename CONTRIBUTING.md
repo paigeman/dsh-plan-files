@@ -14,7 +14,7 @@ Fork the repository and create a branch for your change. Use Node.js 24.16.0 to 
 npm ci --ignore-scripts
 ```
 
-This installs the development tools and private test workspace under `test/runtimes/`. The workspace pins the DSH and Cordis libraries used by the native tests. The plugin runtime requires Node.js 22 or later.
+This installs the development tools and private test workspaces under `test/runtimes/`. Each workspace pins the DSH and Cordis libraries for one version of the native tests. The plugin runtime requires Node.js 22 or later.
 
 ## Make and check a change
 
@@ -57,7 +57,7 @@ Use synthetic plans in regression tests. Changes to editing and approval should 
 
 ## Maintain DSH compatibility
 
-The current supported runtime is DSH `0.2.2-rc.3`. The private test workspaces, `engines.dsh`, and both README support tables must agree. Compatibility tests check that agreement and use DSH's own compatibility checker.
+The current runtime matrix covers DSH `0.2.2-rc.3`, `0.2.2-rc.4`, and `0.2.2-rc.5`. The private test workspaces, `engines.dsh`, and both README support tables must agree. Compatibility tests check that agreement and use DSH's own compatibility checker.
 
 To add a supported DSH version, follow these steps.
 
@@ -78,11 +78,11 @@ npm run test:desktop
 
 The runner installs or refreshes the private `dsh-plan-files-dev` package with a `plan-files-dev` component and `[DEV]` titles. It connects a development controller through an owned block in the Desktop profile's `cordis.patch.yml`. Profile backups, candidate packages, synthetic projects, plans, and reports stay under `.agent-tmp/acceptance/`. Keep the checkout in place while using the controller.
 
-Acceptance uses Desktop's configured real model and normal model quota. It checks plan creation, natural-language feedback, exact revision, native approval, and reuse of the file after Plan Mode re-entry with the standard and PTC presets. The runner checks for active conversations before switching this project's plugin.
+Acceptance uses Desktop's configured real model and normal model quota. It checks plan creation, the path passed to the frontend, natural-language feedback, exact revision, native approval, and reuse of the file after Plan Mode re-entry with the standard and PTC presets. The runner checks for active conversations before switching this project's plugin.
 
 Cleanup stops the owned test Agents, removes their saved conversations, restores the stable component states, and turns off the development bundle, component, and controller. Plan files and reports are retained for inspection. Cleanup failures fail the acceptance run.
 
-The Desktop adapter has been exercised on macOS with DSH `0.2.2-rc.3`. macOS finds the bundled Desktop CLI automatically. Set `DSH_DESKTOP_CLI` to the bundled launcher if the installation is elsewhere.
+The Desktop adapter has passed on macOS with DSH `0.2.2-rc.3` and `0.2.2-rc.5`. The runner checks the bundled CLI version and the development archive's identity before installation. Set `DSH_DESKTOP_CLI` to the bundled launcher if the installation is outside `/Applications/DeepSeek Harness.app`.
 
 For controller diagnostics, use the following commands after preparing a matching candidate with `npm run test:desktop`.
 
@@ -103,11 +103,19 @@ With dsh-TUI installed and Python 3 available on macOS or Linux, run the termina
 npm run test:tui
 ```
 
-The runner loads a development component through an isolated overlay and operates the real frontend in a pseudo-terminal. It exercises the `/plan` picker, Shift+Tab read-only mode, natural-language feedback, exact edits, and native approval. Model requests use the saved TUI model route or DSH's default and consume normal model quota.
+The runner loads a development component through an isolated overlay and operates the real frontend in a pseudo-terminal. It exercises the `/plan` picker, Shift+Tab read-only mode, visible plan paths, natural-language feedback, exact edits, and native approval. Model requests use the saved TUI model route or DSH's default and consume normal model quota.
 
 Preferences, storage, session records, plans, and terminal output stay under a fresh `.agent-tmp/tui-*` directory. The runner removes its test conversations after exit, and the development component stops with the process. Reports and approved plans are retained.
 
-Set `DSH_TUI_PACKAGE` to the frontend's `package.json` and `DSH_CLI` to the engine command when using other installation paths. For a configuration-only check, run `npm run test:tui:config`.
+The runner checks the actual CLI version against the plugin's test matrix and the frontend's DSH peer range. Set `DSH_TUI_PACKAGE` to the frontend's `package.json` and `DSH_CLI` to the engine command when using other installation paths. For a configuration-only check, run `npm run test:tui:config`.
+
+To upgrade a mise-managed DSH installation and its `dsh-tui` profile before running terminal acceptance, supply the exact target versions.
+
+```bash
+npm run test:tui:upgrade -- 0.2.2-rc.5 0.20.2
+```
+
+For the upgrade from `0.20.1` and `rc.3`, the runner updates the TUI profile under `rc.3` first because `0.20.2` supports both cores. It then installs `rc.5` through mise and checks both installed versions. If only the installed frontend supports both cores, the runner installs the core first. A transition with no compatible intermediate pair requires a separate upgrade to a compatible release before retrying. Plain `test:tui` uses the installed versions as-is.
 
 ## Open a pull request
 

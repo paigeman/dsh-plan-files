@@ -193,6 +193,18 @@ export async function apply(ctx, config = {}) {
           );
         }
       }
+      for (const { question, review } of checks) {
+        // Both clients receive the question text. The detail remains the exact reviewed Markdown.
+        const path = /[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/u.test(review.path)
+          ? JSON.stringify(review.path).replace(/[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/gu, (char) =>
+              char
+                .split("")
+                .map((unit) => `\\u${unit.charCodeAt(0).toString(16).padStart(4, "0")}`)
+                .join(""),
+            )
+          : review.path;
+        question.question += `\nPlan file: ${path}`;
+      }
       const answer = await next();
       for (const { question, review } of checks) {
         const item = answer.answers.find((item) => item.id === question.id);

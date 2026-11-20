@@ -372,6 +372,8 @@ export function apply(ctx, config) {
         (question) => question.intent?.kind === "plan-review",
       );
       if (!question) return next();
+      assert.equal(spec.paths.size, 1, "Review opened without a saved plan path.");
+      assert(question.question.endsWith(`\nPlan file: ${[...spec.paths][0]}`));
       if (spec.phase === 0) {
         assert.equal(question.detail, spec.initial);
         spec.phase++;

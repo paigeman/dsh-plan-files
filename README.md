@@ -4,7 +4,7 @@
 
 DSH Plan Files keeps DeepSeek Harness (DSH) plans in independent Markdown files while using DSH's native Plan Review for feedback and approval.
 
-The plugin supports DSH `0.2.2-rc.3` and Node.js 22 or later.
+The plugin supports DSH `0.2.2-rc.3`, `0.2.2-rc.4`, and `0.2.2-rc.5`. It requires Node.js 22 or later.
 
 ## Installation
 
@@ -71,12 +71,24 @@ Shell and other independent processes run under their existing DSH permissions. 
 
 ## Compatibility
 
-| Plugin version        | Supported DSH versions |
-| --------------------- | ---------------------- |
-| 0.1.0                 | 0.2.2-rc.3             |
-| 0.1.1 (this checkout) | 0.2.2-rc.3             |
+| Plugin version        | Supported DSH versions             |
+| --------------------- | ---------------------------------- |
+| 0.1.0                 | 0.2.2-rc.3                         |
+| 0.1.1                 | 0.2.2-rc.3                         |
+| 0.1.2 (this checkout) | 0.2.2-rc.3, 0.2.2-rc.4, 0.2.2-rc.5 |
 
-The supported DSH version matches `engines.dsh` and the pinned test workspace. GitHub Actions is configured to run native compatibility tests and packed-plugin checks on Linux, macOS, and Windows. Local macOS validation covers the native DSH runtime and real-model Desktop sessions using the standard and PTC presets. Compatibility with dsh-TUI `0.20.1` has also been tested through its `/plan` picker and Shift+Tab read-only mode. Linux sandbox behavior remains unverified.
+The supported DSH versions match `engines.dsh` and the pinned test workspaces. GitHub Actions runs native compatibility tests and packed-plugin checks for each version on Linux, macOS, and Windows. On macOS, real-model Desktop acceptance passed with the standard and PTC presets on DSH `0.2.2-rc.3` and `0.2.2-rc.5`. Terminal acceptance covered `/plan` and Shift+Tab read-only mode on dsh-TUI `0.20.1` with DSH `0.2.2-rc.3` and `0.20.2` with DSH `0.2.2-rc.5`. Linux sandbox behavior remains unverified.
+
+### Plan path in the review card
+
+The review card shows the saved Markdown path for plans managed by this plugin. Click the path in Desktop to copy it. In dsh-TUI the path appears below the approval question.
+
+| Frontend       | DSH versions verified for path display |
+| -------------- | -------------------------------------- |
+| DSH Desktop    | 0.2.2-rc.5 (bundled)                   |
+| dsh-TUI 0.20.2 | 0.2.2-rc.3, 0.2.2-rc.5                 |
+
+The table records frontend verification for path display. The plugin version table above covers file saving, editing, and approval. Desktop uses the frontend's review actions slot, which is optional for the native approval flow.
 
 ## Contributing
 

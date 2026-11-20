@@ -29,6 +29,7 @@ const files = packed.files.map((file) => file.path);
 for (const file of [
   "package.json",
   "index.js",
+  "client.js",
   "lib/plan-store.js",
   "lib/exact-edit.js",
   "cordis.patch.yml",
@@ -42,7 +43,7 @@ for (const file of [
 for (const file of files)
   assert.match(
     file,
-    /^(?:package\.json|index\.js|cordis\.patch\.yml|LICENSE|README(?:\.zh-CN)?\.md|lib\/[\w/-]+\.js|locale\/[\w-]+\.json)$/,
+    /^(?:package\.json|index\.js|client\.js|cordis\.patch\.yml|LICENSE|README(?:\.zh-CN)?\.md|lib\/[\w/-]+\.js|locale\/[\w-]+\.json)$/,
   );
 
 const archive = join(output, packed.filename);
@@ -54,6 +55,8 @@ assert.equal(published.name, "dsh-plan-files");
 assert.equal(published.version, pkg.version);
 assert.notEqual(published.private, true);
 assert.deepEqual(published.engines, pkg.engines);
+assert.equal(published.dsh.client.platform, "web");
+assert.equal(published.exports["./client"], "./client.js");
 const patch = readFileSync(join(directory, "cordis.patch.yml"), "utf8");
 assert.match(patch, /id: plan-files\s/);
 assert.ok(patch.includes(`name: "${pkg.name}"`));

@@ -1,6 +1,6 @@
 {
   "name": "dsh-plan-files",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Persistent Markdown plan files with native DeepSeek Harness Plan Review",
   "type": "module",
   "keywords": [
@@ -16,10 +16,12 @@
   ],
   "exports": {
     ".": "./index.js",
+    "./client": "./client.js",
     "./locale/*.json": "./locale/*.json"
   },
   "files": [
     "index.js",
+    "client.js",
     "lib/**/*.js",
     "cordis.patch.yml",
     "locale/*.json",
@@ -29,11 +31,14 @@
   ],
   "engines": {
     "node": ">=22.0.0",
-    "dsh": "0.2.2-rc.3"
+    "dsh": "0.2.2-rc.3 || 0.2.2-rc.4 || 0.2.2-rc.5"
   },
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web"
     }
   },
   "scripts": {
@@ -48,6 +53,7 @@
     "acceptance": "node scripts/acceptance.mjs",
     "test:desktop": "node scripts/acceptance.mjs desktop",
     "test:tui": "node scripts/acceptance.mjs tui",
+    "test:tui:upgrade": "node scripts/acceptance.mjs tui-upgrade",
     "test:tui:config": "node scripts/acceptance.mjs tui-config",
     "check": "npm run format:check && npm run lint && npm run test:native && npm run verify:package",
     "prepublishOnly": "npm run check"
